@@ -1,31 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wingo 1 Min Signal</title>
+    <style>
+        body {
+            background-color: #0b131e;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #152238;
+            border: 1px solid #23395d;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            width: 320px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        h2 {
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+        .timer {
+            font-size: 28px;
+            font-weight: bold;
+            color: #38bdf8;
+            margin: 15px 0;
+        }
+        .period {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+        .signal-box {
+            background-color: #1e293b;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
 
+    <div class="card">
+        <h2>Wingo 1 Min Signal</h2>
+        <div class="timer" id="timer">00:00</div>
+        <div class="period" id="period">Period: Loading...</div>
+        <div class="signal-box" id="signal">ANALYZING...</div>
+    </div>
 
     <script>
         function updateGameData() {
             const now = new Date();
             
-            // আসল গেমের পিরিয়ডের সাথে মিল রাখার জন্য অফসেট ক্যালকুলেশন
-            // বর্তমান সময় থেকে মোট মিনিট হিসাব করে গেমের ফরম্যাটে রূপান্তর
-            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const diffMinutes = Math.floor((now - startOfDay) / 60000);
-            
-            // গেমের বেস পিরিয়ড ফরম্যাট (YYYYMMDD1000 + সিরিয়াল)
+            // আসল গেমের পিরিয়ডের সাথে মিল রাখার জন্য সঠিক টাইম ক্যালکولেশন
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             
-            // গেম সাইটের সাথে মিল করার জন্য পিরিয়ড নম্বর বেস
-            const basePeriodNumber = 11000 + diffMinutes; 
-            const exactPeriodString = `${year}${month}${day}1000${basePeriodNumber}`;
+            // আজকের দিনের শুরু থেকে মোট কত মিনিট পার হয়েছে তা বের করা
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const totalMinutesToday = Math.floor((now - startOfDay) / 60000);
             
-            // কাউন্টডাউন টাইমার (সেকেন্ড মিলকরণ)
+            // গেম সাইটের বর্তমান পিরিয়ডের সাথে নিখুঁতভাবে সিঙ্ক করার অফসেট
+            const targetPeriodNumber = 11000 + totalMinutesToday;
+            const exactPeriodString = `${year}${month}${day}1000${targetPeriodNumber}`;
+            
+            // ১ মিনিটের কাউন্টডাউন টাইমার (৬০ থেকে ০ সেকেন্ড)
             const seconds = now.getSeconds();
             const remainingSeconds = 59 - seconds;
             document.getElementById("timer").innerText = `00:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 
             document.getElementById("period").innerText = `Period: ${exactPeriodString}`;
 
-            // সিগন্যাল লজিক
+            // সিগন্যাল প্রেডিকশন লজিক
             generateSignal(exactPeriodString);
         }
 
@@ -41,3 +99,6 @@
         setInterval(updateGameData, 1000);
         updateGameData();
     </script>
+</body>
+</html>
+
