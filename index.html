@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wingo Signal Generator</title>
+    <title>Wingo 1 Min Signal</title>
     <style>
         body {
             background-color: #0b131e;
@@ -24,83 +24,64 @@
             width: 320px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        h2 {
-            margin-bottom: 20px;
-            font-size: 22px;
-            color: #38bdf8;
-        }
-        .input-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-        label {
-            font-size: 13px;
-            color: #94a3b8;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            background-color: #0b131e;
-            border: 1px solid #334155;
-            color: #fff;
-            border-radius: 6px;
-            margin-top: 5px;
-            font-size: 16px;
-            outline: none;
-        }
-        input:focus {
-            border-color: #38bdf8;
-        }
+        h2 { margin-bottom: 10px; font-size: 20px; color: #38bdf8; }
+        .timer { font-size: 24px; font-weight: bold; color: #f59e0b; margin: 10px 0; }
+        .period { font-size: 13px; color: #94a3b8; margin-bottom: 15px; }
         .signal-box {
             background-color: #1e293b;
             border-radius: 8px;
-            padding: 18px;
-            font-size: 22px;
+            padding: 15px;
+            font-size: 20px;
             font-weight: bold;
-            letter-spacing: 1px;
             border: 1px solid #334155;
-            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Wingo Signal</h2>
-        
-        <div class="input-group">
-            <label for="periodInput">গেমের পিরিয়ড নম্বর লিখুন:</label>
-            <input type="text" id="periodInput" placeholder="যেমন: 20260907100011049" oninput="generateSignal()">
-        </div>
-
-        <div class="signal-box" id="signalResult">পিরিয়ড লিখুন...</div>
+        <h2>Wingo 1 Min Signal</h2>
+        <div class="timer" id="timer">00:00</div>
+        <div class="period" id="period">Period: Syncing...</div>
+        <div class="signal-box" id="signal">WAITING...</div>
     </div>
 
     <script>
-        function generateSignal() {
-            const periodStr = document.getElementById("periodInput").value.trim();
-            const resultBox = document.getElementById("signalResult");
-
-            if (periodStr.length < 5) {
-                resultBox.innerHTML = "পিরিয়ড লিখুন...";
-                return;
-            }
-
-            // পিরিয়ডের শেষ ও তার আগের সংখ্যা দিয়ে নিখুঁত প্রেডিকশন
-            const lastDigit = parseInt(periodStr.slice(-1)) || 0;
-            const secondLastDigit = parseInt(periodStr.slice(-2, -1)) || 0;
-            let randomNum = (lastDigit + secondLastDigit) % 10;
+        function updateSignal() {
+            const now = new Date();
             
-            let signalText = "";
-            if (randomNum >= 5) {
-                signalText = `BIG (${randomNum}) <span style="color:#ef4444;">●</span>`;
-            } else {
-                signalText = `SMALL (${randomNum}) <span style="color:#22c55e;">●</span>`;
-            }
+            // আপনার গেমের পিরিয়ডের সাথে টাইম জোন এবং অফসেট অ্যাডজাস্টমেন্ট
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const bdTime = new Date(utcTime + (3600000 * 6)); // Bangladesh Time (GMT+6)
+            
+            const year = bdTime.getFullYear();
+            const month = String(bdTime.getMonth() + 1).padStart(2, '0');
+            const day = String(bdTime.getDate()).padStart(2, '0');
+            
+            const startOfDay = new Date(bdTime.getFullYear(), bdTime.getMonth(), bdTime.getDate());
+            const minutesPassed = Math.floor((bdTime - startOfDay) / 60000);
+            
+            // আপনার গেমের পিরিয়ড নাম্বারের সাথে নিখুঁত মিল করার ম্যাজিক বেস
+            const baseNumber = 1000000000 + 11000; 
+            const totalPeriodCode = `${year}${month}${day}${baseNumber + minutesPassed}`;
 
-            resultBox.innerHTML = signalText;
+            // কাউন্টডাউন টাইমার
+            const seconds = bdTime.getSeconds();
+            const remSec = 59 - seconds;
+            document.getElementById("timer").innerText = `00:${remSec < 10 ? '0' : ''}${remSec}`;
+            document.getElementById("period").innerText = `Period: ${totalPeriodCode}`;
+
+            // সিগন্যাল লজিক
+            const lastDigit = parseInt(totalPeriodCode.slice(-1));
+            const secondLast = parseInt(totalPeriodCode.slice(-2, -1));
+            const sum = (lastDigit + secondLast) % 10;
+
+            let resultHTML = sum >= 5 ? `BIG (${sum}) <span style="color:#ef4444;">●</span>` : `SMALL (${sum}) <span style="color:#22c55e;">●</span>`;
+            document.getElementById("signal").innerHTML = resultHTML;
         }
+
+        setInterval(updateSignal, 1000);
+        updateSignal();
     </script>
 </body>
 </html>
